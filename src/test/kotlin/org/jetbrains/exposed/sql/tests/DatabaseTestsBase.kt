@@ -1,17 +1,15 @@
 package org.jetbrains.exposed.sql.tests
 
 import com.mysql.management.MysqldResource
-import com.mysql.management.driverlaunched.MysqldResourceNotFoundException
-import com.mysql.management.driverlaunched.ServerLauncherSocketFactory
+import com.mysql.management.driverlaunched.*
 import com.mysql.management.util.Files
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.*
-import org.joda.time.DateTimeZone
 import ru.yandex.qatools.embed.postgresql.PostgresStarter
-import ru.yandex.qatools.embed.postgresql.config.AbstractPostgresConfig
-import ru.yandex.qatools.embed.postgresql.config.PostgresConfig
+import ru.yandex.qatools.embed.postgresql.config.*
 import ru.yandex.qatools.embed.postgresql.distribution.Version
+import java.time.ZoneId
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -76,7 +74,6 @@ abstract class DatabaseTestsBase {
     fun withDb(dbSettings: TestDB, statement: Transaction.() -> Unit) {
         if (dbSettings !in TestDB.enabledInTests()) return
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
-        DateTimeZone.setDefault(DateTimeZone.UTC)
 
         if (dbSettings !in registeredOnShutdown) {
             dbSettings.beforeConnection()

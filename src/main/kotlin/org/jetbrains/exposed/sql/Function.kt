@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.joda.time.DateTime
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import java.util.*
 
 abstract class Function<out T> : ExpressionWithColumnType<T>()
@@ -14,7 +14,7 @@ class Count(val expr: Expression<*>, val distinct: Boolean = false): Function<In
     override val columnType: IColumnType = IntegerColumnType()
 }
 
-class Date(val expr: Expression<DateTime?>): Function<DateTime>() {
+class Date(val expr: Expression<LocalDateTime?>): Function<LocalDateTime>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "DATE(${expr.toSQL(queryBuilder)})"
     }
@@ -22,12 +22,12 @@ class Date(val expr: Expression<DateTime?>): Function<DateTime>() {
     override val columnType: IColumnType = DateColumnType(false)
 }
 
-class CurrentDateTime : Function<DateTime>() {
+class CurrentDateTime : Function<LocalDateTime>() {
     override fun toSQL(queryBuilder: QueryBuilder) = "CURRENT_TIMESTAMP"
     override val columnType: IColumnType = DateColumnType(false)
 }
 
-class Month(val expr: Expression<DateTime?>): Function<DateTime>() {
+class Month(val expr: Expression<LocalDateTime?>): Function<LocalDateTime>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "MONTH(${expr.toSQL(queryBuilder)})"
     }

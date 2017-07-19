@@ -1,8 +1,7 @@
 package org.jetbrains.exposed.sql.tests.shared
 
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.joda.time.DateTime
+import org.jetbrains.exposed.sql.vendors.*
+import java.time.*
 import kotlin.test.assertEquals
 
 private fun<T> assertEqualCollectionsImpl(collection : Collection<T>, expected : Collection<T>) {
@@ -38,7 +37,7 @@ fun<T> assertEqualLists (l1: List<T>, vararg expected : T) {
     assertEqualLists(l1, expected.toList())
 }
 
-fun assertEqualDateTime (d1: DateTime?, d2: DateTime?) {
+fun assertEqualDateTime (d1: LocalDateTime?, d2: LocalDateTime?) {
     if (d1 == null) {
         if (d2 != null)
             error("d1 is null while d2 is not")
@@ -49,9 +48,11 @@ fun assertEqualDateTime (d1: DateTime?, d2: DateTime?) {
 
         // Mysql doesn't support millis prior 5.6.4
         if (currentDialect == MysqlDialect && !MysqlDialect.isFractionDateTimeSupported()) {
-            assertEquals(d1.millis / 1000, d2.millis / 1000)
+            assertEquals(d1.atZone(ZoneId.systemDefault()).toInstant().epochSecond,
+                    d2.atZone(ZoneId.systemDefault()).toInstant().epochSecond)
         } else {
-            assertEquals(d1.millis, d2.millis)
+            assertEquals(d1.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                    d2.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
         }
     }
 }

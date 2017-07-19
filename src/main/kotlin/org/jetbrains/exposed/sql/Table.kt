@@ -1,20 +1,14 @@
 package org.jetbrains.exposed.sql
 
-import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.dao.IdTable
+import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.currentDialectIfAvailable
-import org.jetbrains.exposed.sql.vendors.inProperCase
-import org.joda.time.DateTime
+import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.sql.Blob
+import java.time.LocalDateTime
 import java.util.*
-import kotlin.reflect.KMutableProperty1
-import kotlin.reflect.KProperty1
-import kotlin.reflect.full.memberProperties
-import kotlin.reflect.full.primaryConstructor
+import kotlin.reflect.*
+import kotlin.reflect.full.*
 
 interface FieldSet {
     val fields: List<Expression<*>>
@@ -213,11 +207,11 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     fun long(name: String): Column<Long> = registerColumn(name, LongColumnType())
 
-    fun date(name: String): Column<DateTime> = registerColumn(name, DateColumnType(false))
+    fun date(name: String): Column<LocalDateTime> = registerColumn(name, DateColumnType(false))
 
     fun bool(name: String): Column<Boolean> = registerColumn(name, BooleanColumnType())
 
-    fun datetime(name: String): Column<DateTime> = registerColumn(name, DateColumnType(true))
+    fun datetime(name: String): Column<LocalDateTime> = registerColumn(name, DateColumnType(true))
 
     fun blob(name: String): Column<Blob> = registerColumn(name, BlobColumnType())
 
