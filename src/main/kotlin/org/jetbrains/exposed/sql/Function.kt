@@ -1,7 +1,7 @@
 package org.jetbrains.exposed.sql
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.*
 import java.util.*
 
 abstract class Function<out T> : ExpressionWithColumnType<T>()
@@ -14,25 +14,25 @@ class Count(val expr: Expression<*>, val distinct: Boolean = false): Function<In
     override val columnType: IColumnType = IntegerColumnType()
 }
 
-class Date(val expr: Expression<LocalDateTime?>): Function<LocalDateTime>() {
+class Date(val expr: Expression<LocalDate?>): Function<LocalDate>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "DATE(${expr.toSQL(queryBuilder)})"
     }
 
-    override val columnType: IColumnType = DateColumnType(false)
+    override val columnType: IColumnType = DateColumnType()
 }
 
-class CurrentDateTime : Function<LocalDateTime>() {
+class CurrentDateTime : Function<ZonedDateTime>() {
     override fun toSQL(queryBuilder: QueryBuilder) = "CURRENT_TIMESTAMP"
-    override val columnType: IColumnType = DateColumnType(false)
+    override val columnType: IColumnType = DateTimeColumnType(false)
 }
 
-class Month(val expr: Expression<LocalDateTime?>): Function<LocalDateTime>() {
+class Month(val expr: Expression<LocalDate?>): Function<LocalDate>() {
     override fun toSQL(queryBuilder: QueryBuilder): String {
         return "MONTH(${expr.toSQL(queryBuilder)})"
     }
 
-    override val columnType: IColumnType = DateColumnType(false)
+    override val columnType: IColumnType = DateColumnType()
 }
 
 class LowerCase<out T: String?>(val expr: Expression<T>) : Function<T>() {

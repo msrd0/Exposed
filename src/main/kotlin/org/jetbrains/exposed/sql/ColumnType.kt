@@ -194,50 +194,89 @@ class EnumerationNameColumnType<T:Enum<T>>(val klass: Class<T>, length: Int): St
 
 private val DEFAULT_DATE_STRING_FORMATTER = DateTimeFormatter.ofPattern("uuuu-MM-dd", Locale.ROOT)
 private val DEFAULT_DATE_TIME_STRING_FORMATTER = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss.SSSSSS", Locale.ROOT)
+private val DEFAULT_DATE_TIME_ZONE_STRING_FORMATTER = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss.SSSSSSZ", Locale.ROOT)
 private val SQLITE_DATE_STRING_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE
 private val SQLITE_DATE_TIME_STRING_FORMATTER = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss")
 
-class DateColumnType(val time: Boolean): ColumnType() {
-    override fun sqlType(): String  = if (time) currentDialect.dataTypeProvider.dateTimeType() else "DATE"
+class DateColumnType(): ColumnType() {
+    override fun sqlType(): String  = "DATE"
 
     override fun nonNullValueToString(value: Any): String {
         if (value is String) return value
     
-        val dateTime = when (value) {
-            is LocalDateTime  -> value
-            is java.util.Date -> Instant.ofEpochMilli(value.time).atZone(ZoneId.systemDefault()).toLocalDateTime()
+        val date = when (value) {
+            is LocalDate      -> value
+            is java.util.Date -> Instant.ofEpochMilli(value.time).atZone(ZoneId.systemDefault()).toLocalDate()
             else              -> error("Unexpected value: $value")
         }
-
-        return if (time)
-            "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(dateTime)}'"
-        else
-            "'${DEFAULT_DATE_STRING_FORMATTER.format(dateTime)}'"
+        
+        return "'${DEFAULT_DATE_STRING_FORMATTER.format(date)}'"
     }
 
     override fun valueFromDB(value: Any): Any = when(value) {
-        is LocalDateTime -> value
+        is LocalDate      -> value
         is java.util.Date -> valueFromDB(value.time)
-        is Int -> valueFromDB(value.toLong())
-        is Long -> Instant.ofEpochMilli(value).atZone(ZoneId.systemDefault()).toLocalDateTime()
-        is String -> when {
-            currentDialect == SQLiteDialect && time -> LocalDateTime.parse(value, SQLITE_DATE_TIME_STRING_FORMATTER)
-            currentDialect == SQLiteDialect -> LocalDateTime.parse(value, SQLITE_DATE_STRING_FORMATTER)
-            else -> value
-        }
+        is Int            -> valueFromDB(value.toLong())
+        is Long           -> Instant.ofEpochMilli(value).atZone(ZoneId.systemDefault()).toLocalDate()
+        is String         -> when (currentDialect) {
+			SQLiteDialect -> LocalDate.parse(value, SQLITE_DATE_STRING_FORMATTER)
+			else          -> value
+		}
         // REVIEW
-        else -> LocalDateTime.parse(value.toString(), DEFAULT_DATE_TIME_STRING_FORMATTER)
+        else              -> LocalDate.parse(value.toString(), DEFAULT_DATE_STRING_FORMATTER)
     }
 
     override fun notNullValueToDB(value: Any): Any {
-        if (value is LocalDateTime) {
-            val millis = value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            if (time) {
-                return java.sql.Timestamp(millis)
-            }
-            else {
-                return java.sql.Date(millis)
-            }
+        if (value is LocalDate) {
+            val millis = value.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            return java.sql.Date(millis)
+        }
+        return value
+    }
+}
+
+class DateTimeColumnType(val withTimezone : Boolean): ColumnType()
+{
+    override fun sqlType(): String = currentDialect.dataTypeProvider.dateTimeType(withTimezone)
+    
+    override fun nonNullValueToString(value : Any) : String
+    {
+        if (value is String)
+            return value
+        
+        val dateTime = when (value) {
+            is ZonedDateTime  -> value
+            is java.util.Date -> Instant.ofEpochMilli(value.time).atZone(ZoneId.systemDefault())
+            else              -> error("Unexpected value: $value")
+        }
+        
+        return if (withTimezone)
+            "'${DEFAULT_DATE_TIME_ZONE_STRING_FORMATTER.format(dateTime)}'"
+        else
+            "'${DEFAULT_DATE_TIME_STRING_FORMATTER.format(dateTime)}'"
+    }
+    
+    override fun valueFromDB(value : Any) : Any = when (value) {
+        is ZonedDateTime  -> value
+        is java.util.Date -> valueFromDB(value.time)
+        is Int            -> valueFromDB(value.toLong())
+        is Long           -> Instant.ofEpochMilli(value).atZone(ZoneId.systemDefault())
+        is String         -> when (currentDialect) {
+            SQLiteDialect -> LocalDateTime.parse(value, SQLITE_DATE_TIME_STRING_FORMATTER).atZone(ZoneId.systemDefault())
+            else          -> value
+        }
+        // REVIEW
+        else              -> when (withTimezone) {
+            true  -> ZonedDateTime.parse(value.toString(), DEFAULT_DATE_TIME_ZONE_STRING_FORMATTER)
+            false -> LocalDateTime.parse(value.toString(), DEFAULT_DATE_TIME_STRING_FORMATTER).atZone(ZoneId.systemDefault())
+        }
+    }
+    
+    override fun notNullValueToDB(value : Any) : Any
+    {
+        if (value is ZonedDateTime) {
+            val millis = value.toInstant().toEpochMilli()
+            return java.sql.Timestamp(millis)
         }
         return value
     }

@@ -7,8 +7,8 @@ internal object PostgreSQLDataTypeProvider : DataTypeProvider() {
     override fun shortAutoincType(): String = "SERIAL"
 
     override fun longAutoincType(): String = "BIGSERIAL"
-
-    override fun dateTimeType(): String = "TIMESTAMP"
+    
+    override fun dateTimeType(withTimezone : Boolean) = if (withTimezone) "TIMESTAMP WITH TIME ZONE" else "TIMESTAMP"
 
     override fun uuidType(): String = "uuid"
 

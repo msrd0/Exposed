@@ -5,7 +5,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
 import java.sql.Blob
-import java.time.LocalDateTime
+import java.time.*
 import java.util.*
 import kotlin.reflect.*
 import kotlin.reflect.full.*
@@ -207,11 +207,11 @@ open class Table(name: String = ""): ColumnSet(), DdlAware {
 
     fun long(name: String): Column<Long> = registerColumn(name, LongColumnType())
 
-    fun date(name: String): Column<LocalDateTime> = registerColumn(name, DateColumnType(false))
+    fun date(name: String): Column<LocalDate> = registerColumn(name, DateColumnType())
 
     fun bool(name: String): Column<Boolean> = registerColumn(name, BooleanColumnType())
 
-    fun datetime(name: String): Column<LocalDateTime> = registerColumn(name, DateColumnType(true))
+    fun datetime(name: String, withTimezone : Boolean = false): Column<ZonedDateTime> = registerColumn(name, DateTimeColumnType(withTimezone))
 
     fun blob(name: String): Column<Blob> = registerColumn(name, BlobColumnType())
 

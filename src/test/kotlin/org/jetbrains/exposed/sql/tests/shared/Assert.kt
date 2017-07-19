@@ -37,7 +37,20 @@ fun<T> assertEqualLists (l1: List<T>, vararg expected : T) {
     assertEqualLists(l1, expected.toList())
 }
 
-fun assertEqualDateTime (d1: LocalDateTime?, d2: LocalDateTime?) {
+fun assertEqualDate (d1: LocalDate?, d2: LocalDate?) {
+    if (d1 == null) {
+        if (d2 != null)
+            error("d1 is null while d2 is not")
+        return
+    } else {
+        if (d2 == null)
+            error("d1 is not null while d2 is null")
+        
+        assertEquals(d1.toEpochDay(), d2.toEpochDay())
+    }
+}
+
+fun assertEqualDateTime (d1: ZonedDateTime?, d2: ZonedDateTime?) {
     if (d1 == null) {
         if (d2 != null)
             error("d1 is null while d2 is not")
@@ -48,11 +61,9 @@ fun assertEqualDateTime (d1: LocalDateTime?, d2: LocalDateTime?) {
 
         // Mysql doesn't support millis prior 5.6.4
         if (currentDialect == MysqlDialect && !MysqlDialect.isFractionDateTimeSupported()) {
-            assertEquals(d1.atZone(ZoneId.systemDefault()).toInstant().epochSecond,
-                    d2.atZone(ZoneId.systemDefault()).toInstant().epochSecond)
+            assertEquals(d1.toInstant().epochSecond, d2.toInstant().epochSecond)
         } else {
-            assertEquals(d1.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                    d2.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+            assertEquals(d1.toInstant().toEpochMilli(), d2.toInstant().toEpochMilli())
         }
     }
 }

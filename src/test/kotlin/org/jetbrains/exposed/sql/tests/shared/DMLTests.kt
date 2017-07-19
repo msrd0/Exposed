@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.tests.*
 import org.junit.Assert.assertThat
 import org.junit.Test
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.*
 import java.time.temporal.ChronoUnit
 import kotlin.test.*
 
@@ -578,11 +578,11 @@ class DMLTests : DatabaseTestsBase() {
         }
     }
 
-    private fun DMLTestsData.Misc.checkRow(row: ResultRow, n: Int, nn: Int?, d: LocalDateTime, dn: LocalDateTime?, t: LocalDateTime, tn: LocalDateTime?, e: DMLTestsData.E, en: DMLTestsData.E?, es: DMLTestsData.E, esn: DMLTestsData.E?, s: String, sn: String?, dc: BigDecimal, dcn: BigDecimal?) {
+    private fun DMLTestsData.Misc.checkRow(row: ResultRow, n: Int, nn: Int?, d: LocalDate, dn: LocalDate?, t: ZonedDateTime, tn: ZonedDateTime?, e: DMLTestsData.E, en: DMLTestsData.E?, es: DMLTestsData.E, esn: DMLTestsData.E?, s: String, sn: String?, dc: BigDecimal, dcn: BigDecimal?) {
         assertEquals(row[this.n], n)
         assertEquals(row[this.nn], nn)
-        assertEqualDateTime(row[this.d], d)
-        assertEqualDateTime(row[this.dn], dn)
+        assertEqualDate(row[this.d], d)
+        assertEqualDate(row[this.dn], dn)
         assertEqualDateTime(row[this.t], t)
         assertEqualDateTime(row[this.tn], tn)
         assertEquals(row[this.e], e)
@@ -598,8 +598,8 @@ class DMLTests : DatabaseTestsBase() {
     @Test fun testInsert01() {
         val tbl = DMLTestsData.Misc
         val date = today
-        val time = LocalDateTime.now()
-
+        val time = now
+        
         withTables(tbl) {
             tbl.insert {
                 it[n] = 42
@@ -621,7 +621,7 @@ class DMLTests : DatabaseTestsBase() {
     @Test fun testInsert02() {
         val tbl = DMLTestsData.Misc
         val date = today
-        val time = LocalDateTime.now()
+        val time = now
 
         withTables(tbl) {
             tbl.insert {
@@ -648,7 +648,7 @@ class DMLTests : DatabaseTestsBase() {
     @Test fun testInsert03() {
         val tbl = DMLTestsData.Misc
         val date = today
-        val time = LocalDateTime.now()
+        val time = now
 
         withTables(tbl) {
             tbl.insert {
@@ -677,7 +677,7 @@ class DMLTests : DatabaseTestsBase() {
         val stringThatNeedsEscaping = "A'braham Barakhyahu"
         val tbl = DMLTestsData.Misc
         val date = today
-        val time = LocalDateTime.now()
+        val time = now
         withTables(tbl) {
             tbl.insert {
                 it[n] = 42
@@ -765,7 +765,7 @@ class DMLTests : DatabaseTestsBase() {
         val tbl = DMLTestsData.Misc
         withTables(tbl) {
             val date = today
-            val time = LocalDateTime.now()
+            val time = now
             val sTest = "test"
             val dec = BigDecimal("239.42")
             tbl.insert {
@@ -804,7 +804,7 @@ class DMLTests : DatabaseTestsBase() {
         val tbl = DMLTestsData.Misc
         withTables(tbl) {
             val date = today
-            val time = LocalDateTime.now()
+            val time = now
             val sTest = "test"
             val eOne = DMLTestsData.E.ONE
             val dec = BigDecimal("239.42")
@@ -847,7 +847,7 @@ class DMLTests : DatabaseTestsBase() {
         val tbl = DMLTestsData.Misc
         withTables(tbl) {
             val date = today
-            val time = LocalDateTime.now()
+            val time = now
             val eOne = DMLTestsData.E.ONE
             val sTest = "test"
             val dec = BigDecimal("239.42")
@@ -886,7 +886,7 @@ class DMLTests : DatabaseTestsBase() {
     @Test fun testUpdate03() {
         val tbl = DMLTestsData.Misc
         val date = today
-        val time = LocalDateTime.now()
+        val time = now
         val eOne = DMLTestsData.E.ONE
         val dec = BigDecimal("239.42")
         withTables(excludeSettings = listOf(TestDB.MYSQL), tables = tbl) {
@@ -989,8 +989,8 @@ class DMLTests : DatabaseTestsBase() {
                 it[foo.name] = "bar"
             }
             val result = foo.select { foo.id eq id!! }.single()
-
-            assertEquals(today, result[foo.defaultDateTime].truncatedTo(ChronoUnit.DAYS))
+            
+            assertEquals(today, result[foo.defaultDateTime].toLocalDate())
             assertEquals(100, result[foo.defaultInt])
         }
     }
@@ -1099,4 +1099,5 @@ class DMLTests : DatabaseTestsBase() {
     }
 }
 
-private val today: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
+private val now: ZonedDateTime = ZonedDateTime.now()
+private val today: LocalDate = LocalDate.now()

@@ -11,11 +11,12 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:+"
     }
 }
 
 plugins {
-    id "com.jfrog.bintray" version "1.7.3"
     id 'net.researchgate.release' version '2.6.0'
 }
 
@@ -83,21 +84,29 @@ publishing {
     }
 }
 
+apply plugin: 'com.jfrog.artifactory'
 
-bintray {
-    user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
-    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
-    publications = ['exposed', 'spring_transaction']
-    pkg {
-        userOrg = 'kotlin'
-        repo = 'exposed'
-        name = 'exposed'
-        licenses = ['Apache-2.0']
-        vcsUrl = 'https://github.com/JetBrains/Exposed.git'
+artifactory {
+    contextUrl = "https://msrd0.duckdns.org/artifactory"
+    resolve {
+        repository {
+            repoKey = 'gradle'
+        }
+    }
+    publish {
+        repository {
+            repoKey = 'local'
+            username = 'gitlab-ci'
+            password = System.getenv("ARTIFACTORY_PASSWORD")
+            maven = true
+        }
+        defaults {
+            publications('exposed', 'spring_transaction')
+        }
     }
 }
 
-afterReleaseBuild.dependsOn bintrayUpload
+afterReleaseBuild.dependsOn artifactoryPublish
 
 task wrapper(type: Wrapper) {
     gradleVersion = "3.5"

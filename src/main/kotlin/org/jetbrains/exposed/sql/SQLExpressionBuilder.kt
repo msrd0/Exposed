@@ -2,13 +2,13 @@ package org.jetbrains.exposed.sql
 
 import org.jetbrains.exposed.sql.vendors.*
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.*
 
 fun Column<*>.count() = Count(this)
 
-fun <T: LocalDateTime?> Expression<T>.date() = Date(this)
+fun <T: LocalDate?> Expression<T>.date() = Date(this)
 
-fun <T: LocalDateTime?> Expression<T>.month() = Month(this)
+fun <T: LocalDate?> Expression<T>.month() = Month(this)
 
 fun Column<*>.countDistinct() = Count(this, true)
 
@@ -123,12 +123,13 @@ object SqlExpressionBuilder {
 
     fun<T, S: Any> ExpressionWithColumnType<T>.asLiteral(value: S): LiteralOp<*> {
         return when (value) {
-            is Boolean -> booleanLiteral(value)
-            is Int -> intLiteral(value)
-            is Long -> longLiteral(value)
-            is String -> stringLiteral(value)
-            is LocalDateTime -> if ((columnType as DateColumnType).time) dateTimeLiteral(value) else dateLiteral(value)
-            else -> LiteralOp<T>(columnType, value)
+            is Boolean       -> booleanLiteral(value)
+            is Int           -> intLiteral(value)
+            is Long          -> longLiteral(value)
+            is String        -> stringLiteral(value)
+            is LocalDate     -> dateLiteral(value)
+            is ZonedDateTime -> dateTimeLiteral(value, (columnType as DateTimeColumnType).withTimezone)
+            else             -> LiteralOp<T>(columnType, value)
         }
     }
 
